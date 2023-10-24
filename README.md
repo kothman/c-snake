@@ -22,7 +22,7 @@ Press P or Space to start new game if you've collided into the boundaries or you
 
 
 ### To Do
-* Reduce redundancy in calling the same set of functions multiple times
+* Reduce redundancy in commonly performed functions, like rendering
 * Move certain parameters to global variables, like grid_cells_count_x and grid_cells_count_y
 * Allow window resizing with preserved aspect ratio
 * Add more error handling, for SDL functions and malloc/realloc
