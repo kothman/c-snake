@@ -2,7 +2,7 @@
 A classic snake game, written (poorly) in C
 
 ### Requirements
-libsdl2-dev, libsdl2-2.0-0 ([Simple DirectMedia Layer](https://www.libsdl.org/)
+libsdl2-dev, libsdl2-2.0-0 ([Simple DirectMedia Layer](https://www.libsdl.org/))
 
 On a Debian OS, like Ubuntu, install these packages with `sudo apt install libsdl2-dev libsdl2-2.0.0`
 
