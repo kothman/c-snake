@@ -8,9 +8,12 @@
 #define INITIAL_SNAKE_DIRECTION EAST;
 
 /**
+ * Ordered Pair - Int
  * Defines the x and y coordinates of a cell, for the snake body and food pieces.
  * 
  * Top left corner is (0, 0), incrementing down and to the right.
+ * 
+ * x and y are signed so we can check if the snake is out of bounds
 */
 typedef struct {
   int x, y;
@@ -42,9 +45,9 @@ void clear_renderer(SDL_Renderer * renderer)
   }
 }
 
-bool ordered_pair_in_array(OrderedPairI * pair_arr, short c_length, OrderedPairI * pair)
+bool ordered_pair_in_array(OrderedPairI * pair_arr, unsigned int c_length, OrderedPairI * pair)
 {
-  int i;
+  unsigned int i;
   for (i = 0; i < c_length; i++) {
     if (pair_arr[i].x == pair->x && pair_arr[i].y == pair->y)
       return true;
@@ -52,7 +55,7 @@ bool ordered_pair_in_array(OrderedPairI * pair_arr, short c_length, OrderedPairI
   return false;
 }
 
-void randomize_food_location(OrderedPairI * food, OrderedPairI * snake_body, short snake_body_length, OrderedPairI * grid_dimensions)
+void randomize_food_location(OrderedPairI * food, OrderedPairI * snake_body, unsigned int snake_body_length, OrderedPairI * grid_dimensions)
 {
   OrderedPairI p;
   /**
@@ -70,10 +73,10 @@ void randomize_food_location(OrderedPairI * food, OrderedPairI * snake_body, sho
   food->y = p.y;
 }
 
-void render_snake(SDL_Renderer * renderer, OrderedPairI * snake_body, short snake_body_length,
+void render_snake(SDL_Renderer * renderer, OrderedPairI * snake_body, unsigned int snake_body_length,
                   OrderedPairI * screen_dimensions, OrderedPairI * grid_dimensions)
 {
-  int i;
+  unsigned int i;
   OrderedPairI cell_size;
   if (SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, SDL_ALPHA_OPAQUE) < 0)
     print_sdl_err();
@@ -114,8 +117,8 @@ void render_food(SDL_Renderer * renderer, OrderedPairI * food, OrderedPairI * sc
 }
 
 
-void init_snake(OrderedPairI * snake_body, short * snake_body_length, OrderedPairI * grid_dimensions) {
-  int i;
+void init_snake(OrderedPairI * snake_body, unsigned int * snake_body_length, OrderedPairI * grid_dimensions) {
+  unsigned int i;
   *snake_body_length = INITIAL_SNAKE_LENGTH;
   snake_body = realloc(snake_body, sizeof(OrderedPairI) * (*snake_body_length));
   /**
@@ -129,7 +132,7 @@ void init_snake(OrderedPairI * snake_body, short * snake_body_length, OrderedPai
 }
 
 /* Having to include grid_cells_count_y here is silly, but I'm not sure I want to make grid_cells_count_x|y global? */
-void kill_snake(bool * paused, OrderedPairI * snake_body, short * snake_body_length, OrderedPairI * grid_dimensions) {
+void kill_snake(bool * paused, OrderedPairI * snake_body, unsigned int * snake_body_length, OrderedPairI * grid_dimensions) {
   (*paused) = true;
   init_snake(snake_body, snake_body_length, grid_dimensions);
 }
@@ -149,7 +152,7 @@ int main()
   OrderedPairI grid_dimensions = {40, 30};
 
   enum Direction snake_direction = INITIAL_SNAKE_DIRECTION;
-  short snake_body_length = INITIAL_SNAKE_LENGTH;
+  unsigned int snake_body_length = INITIAL_SNAKE_LENGTH;
 
   /** Last cell in array is the snake's tail */
   OrderedPairI * snake_body = malloc(snake_body_length * sizeof(OrderedPairI));
