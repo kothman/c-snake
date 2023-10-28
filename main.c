@@ -13,8 +13,8 @@
  * Top left corner is (0, 0), incrementing down and to the right.
 */
 typedef struct {
-  short x, y;
-} Cell;
+  int x, y;
+} OrderedPairI;
 
 /**
  * Directions that the snake can move in
@@ -42,19 +42,19 @@ void clear_renderer(SDL_Renderer * renderer)
   }
 }
 
-bool x_y_is_in_cell_array(Cell * c, short c_length, short x, short y)
+bool ordered_pair_in_array(OrderedPairI * pair_arr, short c_length, OrderedPairI * pair)
 {
   int i;
   for (i = 0; i < c_length; i++) {
-    if (c[i].x == x && c[i].y == y)
+    if (pair_arr[i].x == pair->x && pair_arr[i].y == pair->y)
       return true;
   }
   return false;
 }
 
-void randomize_food_location(Cell * food, Cell * snake_body, short snake_body_length, short grid_cells_count_x, short grid_cells_count_y)
+void randomize_food_location(OrderedPairI * food, OrderedPairI * snake_body, short snake_body_length, OrderedPairI * grid_dimensions)
 {
-  short x, y;
+  OrderedPairI p;
   /**
    * Probably a more efficient way to make sure food locaiton is not within snake body,
    * but probably not too inefficient given small size of snake array.
@@ -62,64 +62,76 @@ void randomize_food_location(Cell * food, Cell * snake_body, short snake_body_le
    * What happens if the food can't be rendered anywhere?
    **/
   do {
-    x = rand() % grid_cells_count_x;
-    y = rand() % grid_cells_count_y;
-  } while (x_y_is_in_cell_array(snake_body, snake_body_length, x, y));
-  (*food).x = x;
-  (*food).y = y;
+    p.x = rand() % grid_dimensions->x;
+    p.y = rand() % grid_dimensions->y;
+    
+  } while (ordered_pair_in_array(snake_body, snake_body_length, &p));
+  food->x = p.x;
+  food->y = p.y;
 }
 
-void render_snake(SDL_Renderer * renderer, Cell * snake_body, short snake_body_length,
-                  short screen_width, short screen_height, short grid_cells_count_x, short grid_cells_count_y)
+void render_snake(SDL_Renderer * renderer, OrderedPairI * snake_body, short snake_body_length,
+                  OrderedPairI * screen_dimensions, OrderedPairI * grid_dimensions)
 {
   int i;
-  SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, SDL_ALPHA_OPAQUE);
+  OrderedPairI cell_size;
+  if (SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, SDL_ALPHA_OPAQUE) < 0)
+    print_sdl_err();
   /** Calculate size and position of each cell based on window and grid size
    * 
    * This code is duplicated in the render_food function, and can probably be consolidated
   */
-  short cell_size_x = screen_width / grid_cells_count_x;
-  short cell_size_y = screen_height / grid_cells_count_y;
+  cell_size.x = screen_dimensions->x / grid_dimensions->x;
+  cell_size.y = screen_dimensions->y / grid_dimensions->y;
   for (i = 0; i < snake_body_length; i++) {
     SDL_Rect rect = {
-      snake_body[i].x * cell_size_x,
-      snake_body[i].y * cell_size_y,
-      cell_size_x,
-      cell_size_y
+      snake_body[i].x * cell_size.x,
+      snake_body[i].y * cell_size.y,
+      cell_size.x,
+      cell_size.y
     };
-    SDL_RenderFillRect(renderer, &rect);
+    if (SDL_RenderFillRect(renderer, &rect) < 0)
+      print_sdl_err();
   }
 }
 
-void render_food(SDL_Renderer * renderer, Cell * food, short screen_width, short screen_height,
-                 short grid_cells_count_x, short grid_cells_count_y)
+void render_food(SDL_Renderer * renderer, OrderedPairI * food, OrderedPairI * screen_dimensions,
+                 OrderedPairI * grid_dimensions)
 {
-  short cell_size_x = screen_width / grid_cells_count_x;
-  short cell_size_y = screen_height / grid_cells_count_y;
-  SDL_Rect food_rect = {food->x * cell_size_x, food->y * cell_size_y, cell_size_x, cell_size_y};
-  SDL_SetRenderDrawColor(renderer, 0xff, 0x00, 0x00, SDL_ALPHA_OPAQUE);
-  SDL_RenderFillRect(renderer, &food_rect);
+  OrderedPairI cell_size;
+  cell_size.x = screen_dimensions->x / grid_dimensions->x;
+  cell_size.y = screen_dimensions->y / grid_dimensions->y;
+  SDL_Rect food_rect = {
+    food->x * cell_size.x,
+    food->y * cell_size.y,
+    cell_size.x,
+    cell_size.y
+  };
+  if (SDL_SetRenderDrawColor(renderer, 0xff, 0x00, 0x00, SDL_ALPHA_OPAQUE) < 0)
+    print_sdl_err();
+  if (SDL_RenderFillRect(renderer, &food_rect) < 0)
+    print_sdl_err();
 }
 
 
-void init_snake(Cell * snake_body, short * snake_body_length, short grid_cells_count_y) {
+void init_snake(OrderedPairI * snake_body, short * snake_body_length, OrderedPairI * grid_dimensions) {
   int i;
   *snake_body_length = INITIAL_SNAKE_LENGTH;
-  snake_body = realloc(snake_body, *snake_body_length);
+  snake_body = realloc(snake_body, sizeof(OrderedPairI) * (*snake_body_length));
   /**
    * Initialize the snake_body cell locations, starting from the West and centered vertically.
    * Assumes that the snake is moving East, and the first element in snake_body is the head.
    **/
   for (i = 0; i < *snake_body_length; i++) {
     snake_body[i].x = (*snake_body_length) - i - 1;
-    snake_body[i].y = grid_cells_count_y / 2;
+    snake_body[i].y = grid_dimensions->y / 2;
   }
 }
 
 /* Having to include grid_cells_count_y here is silly, but I'm not sure I want to make grid_cells_count_x|y global? */
-void kill_snake(bool * paused, Cell * snake_body, short * snake_body_length, short grid_cells_count_y) {
+void kill_snake(bool * paused, OrderedPairI * snake_body, short * snake_body_length, OrderedPairI * grid_dimensions) {
   (*paused) = true;
-  init_snake(snake_body, snake_body_length, grid_cells_count_y);
+  init_snake(snake_body, snake_body_length, grid_dimensions);
 }
 
 
@@ -131,31 +143,29 @@ int main()
   bool paused = false;
   bool has_drawn_pause_screen = false;
 
-  short screen_width = 640;
-  short screen_height = 480;
-
+  OrderedPairI screen_dimensions = {640, 480};
+  
   /** How many cells exist in the player's grid */
-  short grid_cells_count_x = 40;
-  short grid_cells_count_y = 30;
+  OrderedPairI grid_dimensions = {40, 30};
 
   enum Direction snake_direction = INITIAL_SNAKE_DIRECTION;
   short snake_body_length = INITIAL_SNAKE_LENGTH;
 
   /** Last cell in array is the snake's tail */
-  Cell * snake_body = malloc(snake_body_length * sizeof(Cell));
+  OrderedPairI * snake_body = malloc(snake_body_length * sizeof(OrderedPairI));
 
   short snake_move_speed_ms = INITIAL_SNAKE_SPEED_MS;
   Uint64 last_snake_move_ms;
 
-  Cell food = {0, 0};
+  OrderedPairI food = {0, 0};
 
   Uint64 game_loop_start;
   Uint64 game_loop_end;
 
-  init_snake(snake_body, &snake_body_length, grid_cells_count_y);
+  init_snake(snake_body, &snake_body_length, &grid_dimensions);
   /* Initialize rand() for our food randomizer function; can this be done within the following function, only once, instead? */
   srand(time(0));
-  randomize_food_location(&food, snake_body, snake_body_length, grid_cells_count_x, grid_cells_count_y);
+  randomize_food_location(&food, snake_body, snake_body_length, &grid_dimensions);
 
   SDL_Window * window = NULL;
   SDL_Renderer * renderer = NULL;
@@ -168,7 +178,7 @@ int main()
   }
 
   window = SDL_CreateWindow("Sssssssssssssnake", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-			    screen_width, screen_height, SDL_WINDOW_SHOWN);
+			    screen_dimensions.x, screen_dimensions.y, SDL_WINDOW_SHOWN);
   if (window == NULL) {
     print_sdl_err();
     return EXIT_FAILURE;
@@ -184,8 +194,8 @@ int main()
   SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
   clear_renderer(renderer);
-  render_snake(renderer, snake_body, snake_body_length, screen_width, screen_height, grid_cells_count_x, grid_cells_count_y);
-  render_food(renderer, &food, screen_width, screen_height, grid_cells_count_x, grid_cells_count_y);
+  render_snake(renderer, snake_body, snake_body_length,  &screen_dimensions, &grid_dimensions);
+  render_food(renderer, &food,  &screen_dimensions, &grid_dimensions);
   SDL_RenderPresent(renderer);
   last_snake_move_ms = SDL_GetTicks64();
   while (!should_quit) {
@@ -221,8 +231,8 @@ int main()
 
               /** Redraw snake without pause overlay, otherwise game looks like it lags to unpause */
               clear_renderer(renderer);
-              render_snake(renderer, snake_body, snake_body_length, screen_width, screen_height, grid_cells_count_x, grid_cells_count_y);
-              render_food(renderer, &food, screen_width, screen_height, grid_cells_count_x, grid_cells_count_y);
+              render_snake(renderer, snake_body, snake_body_length,  &screen_dimensions, &grid_dimensions);
+              render_food(renderer, &food,  &screen_dimensions, &grid_dimensions);
               /** Update screen with rendering */
               SDL_RenderPresent(renderer);
               has_drawn_pause_screen = false;
@@ -252,10 +262,10 @@ int main()
       last_snake_move_ms = SDL_GetTicks64();
       if (has_drawn_pause_screen == false) {
         clear_renderer(renderer);
-        render_snake(renderer, snake_body, snake_body_length, screen_width, screen_height, grid_cells_count_x, grid_cells_count_y);
-        render_food(renderer, &food, screen_width, screen_height, grid_cells_count_x, grid_cells_count_y);
+        render_snake(renderer, snake_body, snake_body_length,  &screen_dimensions, &grid_dimensions);
+        render_food(renderer, &food,  &screen_dimensions, &grid_dimensions);
         SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0x80);
-        SDL_Rect pause_overlay_rect = {0, 0, screen_width, screen_height};
+        SDL_Rect pause_overlay_rect = {0, 0, screen_dimensions.x, screen_dimensions.y};
         SDL_RenderFillRect(renderer, &pause_overlay_rect);
         SDL_RenderPresent(renderer);
         has_drawn_pause_screen = true;
@@ -266,7 +276,7 @@ int main()
     */
     } else if (SDL_GetTicks64() > last_snake_move_ms + snake_move_speed_ms) {
       /* Save tail piece in case snake ate its food */
-      Cell tail = { snake_body[snake_body_length - 1].x, snake_body[snake_body_length -1].y };
+      OrderedPairI tail = { snake_body[snake_body_length - 1].x, snake_body[snake_body_length -1].y };
       for (i = snake_body_length - 1; i >= 0; i--) {
         if (i == 0) {
           switch (snake_direction) {
@@ -294,12 +304,12 @@ int main()
       }
 
       /* Has the snake bumped into itself or the boundaries of the window? */
-      if (snake_body[0].x < 0 || snake_body[0].x >= grid_cells_count_x || snake_body[0].y < 0 || snake_body[0].y >= grid_cells_count_y ||
+      if (snake_body[0].x < 0 || snake_body[0].x >= grid_dimensions.x || snake_body[0].y < 0 || snake_body[0].y >= grid_dimensions.y ||
           /* First element of snake_body is head, and we don't want to check if the head exists at its own location */
-          x_y_is_in_cell_array(snake_body + 1, snake_body_length - 1, snake_body->x, snake_body->y)) {
+          ordered_pair_in_array(snake_body + 1, snake_body_length - 1, snake_body)) {
         /* Snake is ded :( */
-        kill_snake(&paused, snake_body, &snake_body_length, grid_cells_count_y);
-        randomize_food_location(&food, snake_body, snake_body_length, grid_cells_count_x, grid_cells_count_y);
+        kill_snake(&paused, snake_body, &snake_body_length, &grid_dimensions);
+        randomize_food_location(&food, snake_body, snake_body_length, &grid_dimensions);
         snake_direction = INITIAL_SNAKE_DIRECTION
         snake_move_speed_ms = INITIAL_SNAKE_SPEED_MS;
       }
@@ -307,11 +317,11 @@ int main()
       /* Did the snake eat its food? */
       if (snake_body[0].x == food.x && snake_body[0].y == food.y) {
         /* Increment and reallocate + 1 snake segment */
-        snake_body = realloc(snake_body, (++snake_body_length) * sizeof(Cell));
+        snake_body = realloc(snake_body, (++snake_body_length) * sizeof(OrderedPairI));
         /* Restore the tail */
         snake_body[snake_body_length - 1].x = tail.x;
         snake_body[snake_body_length - 1].y = tail.y;
-        randomize_food_location(&food, snake_body, snake_body_length, grid_cells_count_x, grid_cells_count_y);
+        randomize_food_location(&food, snake_body, snake_body_length, &grid_dimensions);
         /* Make snake go fast */
         if (snake_move_speed_ms > 10) {
           snake_move_speed_ms -= 4;
@@ -320,8 +330,8 @@ int main()
 
       /** Draw the snake and food*/
       clear_renderer(renderer);
-      render_snake(renderer, snake_body, snake_body_length, screen_width, screen_height, grid_cells_count_x, grid_cells_count_y);
-      render_food(renderer, &food, screen_width, screen_height, grid_cells_count_x, grid_cells_count_y);
+      render_snake(renderer, snake_body, snake_body_length,  &screen_dimensions, &grid_dimensions);
+      render_food(renderer, &food,  &screen_dimensions, &grid_dimensions);
       /** Update screen with rendering */
       SDL_RenderPresent(renderer);
 
