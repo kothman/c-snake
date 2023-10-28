@@ -191,7 +191,8 @@ int main()
   /* Enable alpha blending, for pause screen overlay*/
   SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
-  /* SDL init completely */
+  /* SDL init complete */
+  
   init_snake(snake_body, &snake_body_length, &grid_dimensions);
   /* Initialize rand() for our food randomizer function; can this be done within the following function, only once, instead? */
   srand(time(0));
