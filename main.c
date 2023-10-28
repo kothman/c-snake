@@ -165,11 +165,6 @@ int main()
   Uint64 game_loop_start;
   Uint64 game_loop_end;
 
-  init_snake(snake_body, &snake_body_length, &grid_dimensions);
-  /* Initialize rand() for our food randomizer function; can this be done within the following function, only once, instead? */
-  srand(time(0));
-  randomize_food_location(&food, snake_body, snake_body_length, &grid_dimensions);
-
   SDL_Window * window = NULL;
   SDL_Renderer * renderer = NULL;
 
@@ -195,6 +190,12 @@ int main()
 
   /* Enable alpha blending, for pause screen overlay*/
   SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
+  /* SDL init completely */
+  init_snake(snake_body, &snake_body_length, &grid_dimensions);
+  /* Initialize rand() for our food randomizer function; can this be done within the following function, only once, instead? */
+  srand(time(0));
+  randomize_food_location(&food, snake_body, snake_body_length, &grid_dimensions);
 
   clear_renderer(renderer);
   render_snake(renderer, snake_body, snake_body_length,  &screen_dimensions, &grid_dimensions);
@@ -250,8 +251,8 @@ int main()
             break;
         }
         break;
-          default:
-	      break;
+      default:
+	break;
       }
     }
 
