@@ -1,2 +1,4 @@
 # exclude the executable
 snake
+snake_debug
+*.o

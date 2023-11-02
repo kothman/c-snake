@@ -3,21 +3,20 @@ SDL_CFLAGS := $(shell sdl2-config --cflags)
 SDL_LDFLAGS := $(shell sdl2-config --libs)
 CFLAGS = -Wall -Wextra $(SDL_CFLAGS)
 LDFLAGS = $(SDL_LDFLAGS)
+C_STD=c99
 
 PROGRAM = snake
-TARGET = main.c
-
 
 all: snake
 
-%.o: %.c
+%.o: %.c types.h
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 snake: main.o
-	$(CC) -o $(PROGRAM) main.o $(LDFLAGS)
+	$(CC) -o $(PROGRAM) main.o $(LDFLAGS) -std=$(C_STD)
 
-debug: clean
-	$(CC) -ggdb -o $(PROGRAM)_debug $(TARGET) $(LDFLAGS)
+debug: clean main.o
+	$(CC) -ggdb -o $(PROGRAM)_debug main.o $(CFLAGS) $(LDFLAGS) -std=$(C_STD)
 
 clean:
 	rm -f $(PROGRAM) $(PROGRAM)_debug *.o
