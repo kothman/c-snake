@@ -203,6 +203,8 @@ int main()
   render_food(renderer, &food,  &screen_dimensions, &grid_dimensions);
   SDL_RenderPresent(renderer);
   last_snake_move_ms = SDL_GetTicks64();
+
+  /* Main Game Loop */
   while (!should_quit) {
     game_loop_start = SDL_GetPerformanceCounter();
     /** Handle button presses and keystrokes */
@@ -233,7 +235,6 @@ int main()
           case SDLK_p:
             paused = !paused;
             if (paused == false) {
-
               /** Redraw snake without pause overlay, otherwise game looks like it lags to unpause */
               clear_renderer(renderer);
               render_snake(renderer, snake_body, snake_body_length,  &screen_dimensions, &grid_dimensions);
@@ -241,7 +242,6 @@ int main()
               /** Update screen with rendering */
               SDL_RenderPresent(renderer);
               has_drawn_pause_screen = false;
-
             }
             break;
           case SDLK_q:
@@ -282,8 +282,10 @@ int main()
     } else if (SDL_GetTicks64() > last_snake_move_ms + snake_move_speed_ms) {
       /* Save tail piece in case snake ate its food */
       OrderedPairI tail = { snake_body[snake_body_length - 1].x, snake_body[snake_body_length -1].y };
+      /* Move each piece of the snake */
       for (i = snake_body_length - 1; i >= 0; i--) {
-        if (i == 0) {
+	/* Head always moves in new direction */
+	if (i == 0) {
           switch (snake_direction) {
             case NORTH:
               --snake_body[i].y;
@@ -301,11 +303,11 @@ int main()
               fprintf(stderr, "[error]: snake_direction (%i) unexpected?\n", snake_direction);
               break;
           }
+	  /* Starting from tail, each piece gets moved to position matching next segment */
         } else {
           snake_body[i].x = snake_body[i-1].x;
           snake_body[i].y = snake_body[i-1].y;
         }
-
       }
 
       /* Has the snake bumped into itself or the boundaries of the window? */
