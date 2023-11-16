@@ -1,12 +1,13 @@
 # C Snake
-A classic snake game, written (poorly) in C
+A classic snake game, written in C
 
 ### Requirements
-libsdl2-dev, libsdl2-2.0-0 ([Simple DirectMedia Layer](https://www.libsdl.org/))
+* [Make](https://www.gnu.org/software/make/)
+* libsdl2-dev, libsdl2-2.0-0 ([Simple DirectMedia Layer](https://www.libsdl.org/))
 
-On a Debian OS, like Ubuntu, install these packages with `sudo apt install libsdl2-dev libsdl2-2.0.0`
+On a Debian OS, like Ubuntu, install these packages with `sudo apt install libsdl2-dev libsdl2-2.0.0 make`
 
-To build, run the build script `./build.sh`, then start the game with `./snake`
+To build the game, run the command `make` from the project root, then start the game with `./snake`
 
 ### Controls
 Arrow keys to move, Q / ESC to quit, P / Space to pause
@@ -19,10 +20,7 @@ Press P or Space to start new game if you've collided into the boundaries or you
 * Snake gets bigger after eating food
 * Snake dies if it crashes into itself or the window boundaries
 
-
-
-### To Do
-* Reduce redundancy in commonly performed functions, like rendering
-* Move certain parameters to global variables, like grid_cells_count_x and grid_cells_count_y
-* Allow window resizing with preserved aspect ratio
-* Add more error handling, for SDL functions and malloc/realloc
+### To-Do
+* Add a timer and score counter to menu
+* Draw an 'x' on the close button
+* Standardize rounding of floats to ints when drawing grid, snake, and food; alternatively, use SDL float-specific functions
