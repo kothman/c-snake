@@ -8,6 +8,38 @@
 Snake * snake_initialize(void);
 void snake_deinitialize(Snake *s);
 
+bool _incoming_collision(Snake *s)
+{
+  Point head = *(s->segments);
+  Point upcoming_position = s->segments[0];
+  switch (s->direction_queued) {
+    case NORTH:
+      if (head.y == 0) return true;
+      upcoming_position.y--;
+      break;
+    case SOUTH:
+      if (head.y + 1 == GRID_COUNT_Y) return true;
+      upcoming_position.y++;
+      break;
+    case EAST:
+      if (head.x + 1 == GRID_COUNT_X) return true;
+      upcoming_position.x++;
+      break;
+    case WEST:
+      if (head.x == 0) return true;
+      upcoming_position.x--;
+      break;
+    default:
+      fprintf(stderr, "[error]: unknown enum Direction [%i] in snake->direction_queued\n", s->direction_queued);
+      break;
+  }
+  if (is_point_in_array(&upcoming_position, s->segments, s->length))
+    return true;
+  
+  return false;
+}
+
+
 void _update_snake_position(Snake *snake)
 {
   unsigned int s_length = snake->length;
@@ -16,6 +48,14 @@ void _update_snake_position(Snake *snake)
   if (SDL_GetTicks64() >= snake->last_move_ms + snake->move_delay_ms) {
     /* use a queued direction to prevent doubling back on self */
     snake->direction = snake->direction_queued;
+
+    /* is the snake about to run into something? */
+    if (_incoming_collision(snake)) {
+      snake->is_alive = false;
+      return;
+    }
+
+    
     /* save the tail segment in case the snake eats some food */
     SnakeSegment *segment_tail_previous = (snake->segments + snake->length - 1);
     snake->segment_tail_previous.x = segment_tail_previous->x;
@@ -85,37 +125,6 @@ void _update_snake_eat_food(Snake *snake, Food *food) {
   } /* endif snake head position == food position */
 }
 
-bool _incoming_collision(Snake *s)
-{
-  Point head = *(s->segments);
-  Point upcoming_position = s->segments[0];
-  switch (s->direction_queued) {
-    case NORTH:
-      if (head.y == 0) return true;
-      upcoming_position.y--;
-      break;
-    case SOUTH:
-      if (head.y + 1 == GRID_COUNT_Y) return true;
-      upcoming_position.y++;
-      break;
-    case EAST:
-      if (head.x + 1 == GRID_COUNT_X) return true;
-      upcoming_position.x++;
-      break;
-    case WEST:
-      if (head.x == 0) return true;
-      upcoming_position.x--;
-      break;
-    default:
-      fprintf(stderr, "[error]: unknown enum Direction [%i] in snake->direction_queued\n", s->direction_queued);
-      break;
-  }
-  if (is_point_in_array(&upcoming_position, s->segments, s->length))
-    return true;
-  
-  return false;
-}
-
 Snake * _update_reset_snake(Snake *s)
 {
   snake_deinitialize(s);
@@ -143,10 +152,6 @@ void update(GameState *state)
     return;
   }
 
-  if (_incoming_collision(snake)) {
-    snake->is_alive = false;
-    return;
-  }
   _update_snake_position(snake);
   _update_snake_eat_food(snake, food);
   
