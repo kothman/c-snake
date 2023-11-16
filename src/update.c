@@ -100,11 +100,11 @@ bool _incoming_collision(Snake *s)
       break;
     case EAST:
       if (head.x + 1 == GRID_COUNT_X) return true;
-      upcoming_position.x--;
+      upcoming_position.x++;
       break;
     case WEST:
       if (head.x == 0) return true;
-      upcoming_position.x++;
+      upcoming_position.x--;
       break;
     default:
       fprintf(stderr, "[error]: unknown enum Direction [%i] in snake->direction_queued\n", s->direction_queued);
@@ -129,9 +129,11 @@ void update(GameState *state)
   Food *food = &(state->food);
   
   /* wait for process_input to restart game */
-  if (snake->should_reset)
+  if (snake->should_reset) {
     snake = _update_reset_snake(snake);
-  
+    state->snake = snake;
+  }
+    
   if (snake->is_alive == false)
     return;
 
